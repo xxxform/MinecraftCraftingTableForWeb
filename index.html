@@ -1,0 +1,186 @@
+<style>
+    .верстак, .инвентарь {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .верстак .стрелка {
+        font-size: 5em;
+        color: grey;
+    }
+    caption {
+        text-align: left;
+        font-size: 2em;
+        font-family: Enigmatic Unicode Regular;
+    }
+    table td {
+        width: 5em;
+        height: 5em;
+        background-color: rgb(139, 139, 139);
+        border-right: 2px solid white;
+        border-bottom: 2px solid white;
+        box-shadow: inset .2vw .2vh 0.34vw 0.14vw rgb(60,60,60);
+    }
+    table {
+        table-layout: fixed;
+    }
+    table td {
+        background-size: cover;
+    }
+    .интерфейс {
+        background-color: rgb(198, 198, 198);
+    }
+</style>
+
+<div class="интерфейс">
+    <div class="верстак">
+        <table>
+            <caption>Создание</caption>
+            <tbody>
+                <tr> <td></td> <td></td> <td></td> </tr>
+                <tr> <td></td> <td></td> <td></td> </tr>
+                <tr> <td></td> <td></td> <td></td> </tr>
+            </tbody>
+        </table>
+        <div class="стрелка">➜</div>
+        <div class="результат"><table><tr><td></td></tr></table></div>
+    </div>
+
+    <div class="инвентарь">
+        <table>
+            <caption>Инвентарь</caption>
+            <tbody>
+                <tr> <td></td> <td></td> <td></td>  <td></td> <td></td> <td></td>  <td></td> <td></td> <td></td> </tr>
+                <tr> <td></td> <td></td> <td></td>  <td></td> <td></td> <td></td>  <td></td> <td></td> <td></td> </tr>
+                <tr> <td></td> <td></td> <td></td>  <td></td> <td></td> <td></td>  <td></td> <td></td> <td></td> </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let ячейкаВзятогоПредмета = null;
+    let взятыйПредмет = null;
+    let найденныйРецепт = null;
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    const рецепты = {
+        'кирка': [
+            ['железо', 'железо' ,'железо'], 
+            ['', 'палка' ,''],
+            ['', 'палка',  '']
+        ],
+        'меч': [
+            ['', 'железо' ,''], 
+            ['', 'железо' ,''],
+            ['', 'палка',  '']
+        ],
+        'верстак': [
+            ['доски', 'доски' ,''], 
+            ['доски', 'доски' ,''],
+            ['',       '',     '']
+        ],
+        'сундук': [
+            ['доски', 'доски','доски'], 
+            ['доски',    '',  'доски'],
+            ['доски', 'доски','доски']
+        ],
+        'кровать': [
+            ['', '', ''],
+            ['шерсть', 'шерсть', 'шерсть'],
+            ['доски', 'доски','доски']
+        ],
+        'книга': [
+            ['', '', ''],
+            ['бумага', 'бумага', ''],
+            ['кожа', 'бумага', '']
+        ]
+    }
+
+    const получитьСсылкуИзображенияПредмета = предмет => `url('изображения/${предмет}.png')`;
+    const получитьНазваниеПредметаПоСсылке = ссылка => {
+        const индексКонцаНазванияПредмета = ссылка.lastIndexOf('.');
+        const индексНачалаНазванияПредмета = ссылка.lastIndexOf('/') + 1;
+        return ссылка.substring(индексНачалаНазванияПредмета, индексКонцаНазванияПредмета);
+    }
+
+
+    const названияВсехПредметов = Array.from(new Set(Object.entries(рецепты).flat(3))).filter(предмет => предмет);
+    const получитьСтартовыйНабор = (предметы) => {
+        const ячейкиИнвентаря = document.querySelectorAll('.инвентарь > table td');
+
+        предметы.forEach((названиеПредмета, номерПредмета) => {
+            ячейкиИнвентаря[номерПредмета].style.backgroundImage = получитьСсылкуИзображенияПредмета(названиеПредмета);
+        });
+    }
+    получитьСтартовыйНабор(названияВсехПредметов);
+
+    const обработчикКликов = event => {
+        const ячейкиВерстака = document.querySelectorAll('.верстак > table td');
+        const ячейкаРезультата = document.querySelector('.результат > table td');
+        const этаЯчейка = event.target;
+
+        if (этаЯчейка.className === 'верстак' && взятыйПредмет) { //выбросить
+            взятыйПредмет = ячейкаВзятогоПредмета = null;
+            document.body.style.cursor = '';
+        } else if (этаЯчейка.tagName !== 'TD') return;
+
+        if (этаЯчейка.matches('.результат td')) {
+            if (взятыйПредмет) return;
+            if (этаЯчейка.style.backgroundImage) { //потратить ресурсы, получить предмет
+                ячейкиВерстака.forEach(ячейка => ячейка.style.backgroundImage = '');
+            }
+        }
+
+        if (этаЯчейка.style.backgroundImage) {
+            if (взятыйПредмет) {
+                ячейкаВзятогоПредмета.style.backgroundImage = этаЯчейка.style.backgroundImage;
+                этаЯчейка.style.backgroundImage = взятыйПредмет;
+                взятыйПредмет = ячейкаВзятогоПредмета = null;
+                document.body.style.cursor = '';
+            } else {
+                document.body.style.cursor = этаЯчейка.style.backgroundImage + '64 64, default'; 
+                взятыйПредмет = этаЯчейка.style.backgroundImage;
+                ячейкаВзятогоПредмета = этаЯчейка;
+                этаЯчейка.style.backgroundImage = '';
+            }
+        } else if (взятыйПредмет) {
+            if (event.which !== 1) { //если это пкм
+                этаЯчейка.style.backgroundImage = взятыйПредмет;
+                const верстак = document.querySelector('.верстак tbody');
+                const инвентарь = document.querySelector('.инвентарь tbody');
+
+                верстак.onmouseover = инвентарь.onmouseover = ({target, relatedTarget}) => {
+                    if (target.tagName !== 'TD' || target.style.backgroundImage) return;
+                    target.style.backgroundImage = взятыйПредмет;
+                };
+
+                document.body.onmouseup = () => верстак.onmouseover = инвентарь.onmouseover = document.body.onmouseup = null;
+            } else {
+                document.body.style.cursor = '';
+                этаЯчейка.style.backgroundImage = взятыйПредмет;
+                взятыйПредмет = ячейкаВзятогоПредмета = null;
+            }
+        } 
+
+        //поиск рецепта
+        найденныйРецепт = Object.entries(рецепты).find(([названиеПредмета, рецепт]) => {
+            const ячейкиРецепта = рецепт.flat();
+
+            const рецептСовпал = ячейкиРецепта.every((предметРецепта, номерЯчейки) => {
+                const изображениеЯчейкиВерстака = ячейкиВерстака[номерЯчейки].style.backgroundImage;
+                const предметЯчейкиВерстака = получитьНазваниеПредметаПоСсылке(изображениеЯчейкиВерстака);
+                return предметЯчейкиВерстака === предметРецепта;
+            });
+
+            return рецептСовпал;
+        });
+        
+        ячейкаРезультата.style.backgroundImage = найденныйРецепт 
+            ? получитьСсылкуИзображенияПредмета(найденныйРецепт[0]) 
+            : '';
+    }
+
+    const интерфейс = document.querySelector('div.интерфейс');
+    интерфейс.addEventListener('mousedown', обработчикКликов);
+</script>
